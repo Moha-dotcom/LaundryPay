@@ -2,10 +2,10 @@ import pkg from 'pg'
 const {Pool } = pkg;
 const pool = new Pool({
     host: 'localhost',
-    user: 'colab_app',
-    password: 'colab_password',
+    user: '',
+    password: 'laundrypassword',
     port: 5432,
-    database: "colab",
+    database: "laundryapp",
     max: 10,
     idleTimeoutMillis: 30000, // close idle connections
     connectionTimeoutMillis: 2000
