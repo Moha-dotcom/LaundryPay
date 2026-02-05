@@ -148,6 +148,7 @@ UPDATE ACCOUNTS set balance = balance +  2,  updateAt = now()
 -- then Grant access to laundryapp
 ALTER table ACCOUNTS OWNER TO postgres ;
 
+
 -- Now we assign table accounts to ROLE postgres
 -- We will GRANT Some Access to Laundry-app Role
 GRANT SELECT ON ACCOUNTS TO laundryapp;
