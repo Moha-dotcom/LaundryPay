@@ -153,14 +153,24 @@ ALTER table ACCOUNTS OWNER TO postgres ;
 GRANT SELECT ON ACCOUNTS TO laundryapp;
 REVOKE SELECT ON ACCOUNTS from laundryapp;
 
+
+-- Working On Queries
+
+-- Check if user has an account
+SELECT u.id, A.id FROM USERS u
+JOIN ACCOUNTS A on u.id = A.user_id
+WHERE u.id = 5;
+
 SELECT * FROM ACCOUNTS;
+
+SELECT * FROm users;
 
 
 
 INSERT INTO accounts(user_id, balance) VALUES (1, 1000);
 INSERT INTO accounts(user_id, balance) VALUES (2, 45.33);
 
-SELECT * FROM DEPOSITS;
+SELECT deposited_amount, createAt FROM deposits  ORder By id desc limit 3  ;
 
 SELECT count(d.id) As NumberofDeposit FROM DEPOSITS d;
 
