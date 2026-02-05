@@ -23,6 +23,7 @@ class Deposit {
         const client = await pool.connect();
 
         try {
+
             await client.query('BEGIN');
             // 1️⃣ Normalize & validate inputs
             const accountId = Number(deposit._account_id);
