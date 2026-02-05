@@ -9,6 +9,7 @@ CREATE TABLE users (
 
 );
 
+
 CREATE TABLE ACCOUNTS (
    id BIGINT generated always as IDENTITY PRIMARY KEY  ,
    user_id BIGINT references users(id) NOT NULL ,
