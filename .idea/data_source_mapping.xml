@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
-    <file url="file://$PROJECT_DIR$/src/data/user.js" value="58e22853-04fd-48ae-b094-8d59fc8b795c" />
+    <file url="file://$PROJECT_DIR$/src/services/UserService.js" value="58e22853-04fd-48ae-b094-8d59fc8b795c" />
   </component>
 </project>

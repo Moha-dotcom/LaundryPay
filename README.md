@@ -13,7 +13,7 @@
 - Configurable **low-balance alerts**  
 
 ### 💰 Wallet Operations
-- Deposit money into account  
+- DepositService money into account  
 - Top-up balance for laundry usage  
 - Pay for laundry usage  
 - Send money to another card  

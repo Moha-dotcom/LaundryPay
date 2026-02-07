@@ -1,6 +1,8 @@
 import pool from '../config/dbconnect.js'
 import {createLogger, format, transports} from 'winston'
 
+
+
 const { combine, timestamp, label, prettyPrint, } = format;
 const logger = createLogger({
     format: combine(
@@ -11,14 +13,14 @@ const logger = createLogger({
 })
 
 const log = console.log
-class Deposit {
-    constructor(user_id,  deposit_amount, account_id) {
+class DepositService {
+    constructor(user_id,  deposit_amount) {
         this._user_id = user_id;
         this._deposit_amount = deposit_amount;
-        this._account_id = account_id;
+
     }
     getDeposit_amount() { return this._deposit_amount; }
-    getAccount_id() { return this._account_id; }
+
     getUserID(){return this._user_id}
 
 
@@ -39,14 +41,12 @@ class Deposit {
             await client.query('BEGIN');
             // We have to check if the user has an Account
             await this.setCurrentUser(client, this.getUserID());
-            const result = await client.query(`SELECT u.id   AS user_id,  a.id   AS account_id,  a.balance
-            FROM users u
-            LEFT JOIN accounts a ON u.id = a.user_id
-            WHERE u.id = $1
-            `,
-                [this.getUserID()]
-            );
+            const result = await this.checkIfAccountIdExist(client);
             let accountCreationResult = await this.CreateAccountId(result, client);
+            // It returns undefined if this user ID has an available AccountId;
+            // We have to fix that so that if the current User has an accountID
+            // We will just deposit.
+
             console.log(accountCreationResult);
             await client.query('COMMIT')
             return accountCreationResult
@@ -58,6 +58,16 @@ class Deposit {
 
     }
 
+
+    async checkIfAccountIdExist(client) {
+        return await client.query(`SELECT u.id   AS user_id,  a.id   AS account_id,  a.balance
+            FROM users u
+            LEFT JOIN accounts a ON u.id = a.user_id
+            WHERE u.id = $1
+            `,
+            [this.getUserID()]
+        );
+    }
 
     async CreateAccountId(result, client) {
         try {
@@ -75,7 +85,7 @@ class Deposit {
                 balance = insertResult.rows[0].balance;
 
                 console.log('Created new account:', accountID, balance);
-
+                return { accountID, balance };
             }
             return {accountID, balance};
         }catch (err){
@@ -107,7 +117,7 @@ class Deposit {
     //          // log(`Account ID: ${accountId.rows[0].id}`);
     //         // Generate an account ID
     //         if(this.getDeposit_amount() <= 5){
-    //              logger.error('Deposit Amount Has to be More than or Equal to $5')
+    //              logger.error('DepositService Amount Has to be More than or Equal to $5')
     //         }
     //         // 4️⃣ Apply deposit (RLS enforced here)
     //         const updateResult = await this.updateUserAccountWithNewDepositAmount(client, this.getDeposit_amount(), this.getAccount_id());
@@ -137,7 +147,7 @@ class Deposit {
 
 
      async storeDepositLogs(client, deposit_amount, account_id) {
-        if(deposit_amount < 1)  throw new Error ('Deposit amount should be greater than 0');
+        if(deposit_amount < 1)  throw new Error ('DepositService amount should be greater than 0');
         return await client.query(`INSERT INTO DEPOSITS (deposited_amount, account_id) VALUES ($1, $2)  RETURNING deposited_amount `, [Number(deposit_amount), Number(account_id)])
     }
 
@@ -168,7 +178,7 @@ class Deposit {
 // SELECT u.id, A.id FROM USERS u
 // JOIN ACCOUNTS A on u.id = A.user_id;
 
-const deposits = new Deposit(10, 6, 90)
+const deposits = new DepositService(11, 90)
 // const executeDeposit = deposits.setDeposit(deposits);
 // logger.info(await  executeDeposit);
 // logger.info(await deposits.recentDeposit());
@@ -176,3 +186,5 @@ const deposits = new Deposit(10, 6, 90)
 
 const result = await deposits.depositIntoAccount();
 logger.info( result);
+const recentDepositLogs = await deposits.recentDeposit();
+logger.info( recentDepositLogs );
