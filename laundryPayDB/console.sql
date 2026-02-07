@@ -160,7 +160,7 @@ WHERE u.id = 2;
 SELECT * FROm users;
 
 
-SET app.current_user_id = '2';
+SET app.current_user_id = '3';
 
 DELETE FROM ACCOUNTS where user_id = 2;
 
@@ -173,7 +173,7 @@ ALTER TABLE accounts
 
 SELECT * FROM ACCOUNTS;
 INSERT INTO accounts(user_id, balance)
-VALUES ( 4, 0 ) RETURNING id, balance;
+VALUES ( 3, 0 ) RETURNING id, balance;
 GRANT INSERT ON ACCOUNTS TO laundryapp;
 
 SET ROLE laundryapp;
@@ -185,7 +185,8 @@ CREATE POLICY account_insert
     ON accounts
     FOR INSERT
     WITH CHECK (
-    user_id = NULLIF(current_setting('app.current_user_id', true), '')::bigint
+    current_setting('app.current_user_id', true) IS NULL
+        OR user_id = current_setting('app.current_user_id', true)::bigint
     );
 -- SELECT
 CREATE POLICY user_access
