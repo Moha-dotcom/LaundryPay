@@ -68,7 +68,8 @@ COMMIT ;
 
 
 ALTER TABLE ACCOUNTS ENABLE ROW LEVEL SECURITY
-SET app.current_user_id = '2';
+
+SET app.current_user_id = '3';
 CREATE POLICY account_owner_access
     ON accounts
     FOR SELECT
@@ -85,28 +86,20 @@ CREATE POLICY account_update
     USING (false);
 
 
-DROP POLICY IF EXISTS account_owner_access ON accounts;
-CREATE POLICY user_access ON accounts
-    USING (
-    user_id = current_setting('app.current_user_id', true)::bigint
-    );
+DROP POLICY IF EXISTS account_update ON accounts;
+DROP POLICY IF EXISTS user_access ON accounts;
+
+DROP policy user_access on accounts;
 ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
-SET ROLE laundryapp;
-SET ROLE postgres;
+
 ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY account_update
-    ON accounts
-    FOR UPDATE
-    USING (
-    user_id = current_setting('app.current_user_id')::bigint
-    )
-    WITH CHECK (
-    user_id = current_setting('app.current_user_id')::bigint
-    );
 
 
-SET app.current_user_id = '2'
+
+
+
+
 UPDATE accounts
 SET balance = balance + 10,
     updateAt = now()
@@ -156,16 +149,71 @@ REVOKE SELECT ON ACCOUNTS from laundryapp;
 
 
 -- Working On Queries
+SELECT * FROM ACCOUNTS;
+
 
 -- Check if user has an account
-SELECT u.id, A.id FROM USERS u
+SELECT u.id as user_id, A.id as account_id FROM USERS u
 JOIN ACCOUNTS A on u.id = A.user_id
-WHERE u.id = 5;
-
-SELECT * FROM ACCOUNTS;
+WHERE u.id = 2;
 
 SELECT * FROm users;
 
+
+SET app.current_user_id = '2';
+
+DELETE FROM ACCOUNTS where user_id = 2;
+
+
+SELECT * FROM DEPOSITS;
+-- BEFORE WE COULD HAVE SEVERAL ACCOUNTS FOR ONE USERS
+-- NOW WE IMPLEMENT UNIQUE USER ACCOUNT CONSTRAINT
+ALTER TABLE accounts
+    ADD CONSTRAINT unique_user_account UNIQUE (user_id);
+
+SELECT * FROM ACCOUNTS;
+INSERT INTO accounts(user_id, balance)
+VALUES ( 4, 0 ) RETURNING id, balance;
+GRANT INSERT ON ACCOUNTS TO laundryapp;
+
+SET ROLE laundryapp;
+SET ROLE postgres;
+
+DROP policy account_insert on accounts;
+ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY account_insert
+    ON accounts
+    FOR INSERT
+    WITH CHECK (
+    user_id = NULLIF(current_setting('app.current_user_id', true), '')::bigint
+    );
+-- SELECT
+CREATE POLICY user_access
+    ON accounts
+    USING (
+    user_id = NULLIF(current_setting('app.current_user_id', true), '')::bigint
+    );
+
+-- UPDATE
+CREATE POLICY account_update
+    ON accounts
+    FOR UPDATE
+    USING (
+    user_id = NULLIF(current_setting('app.current_user_id', true), '')::bigint
+    )
+    WITH CHECK (
+    user_id = NULLIF(current_setting('app.current_user_id', true), '')::bigint
+    );
+
+-- INSERT
+CREATE POLICY account_insert
+    ON accounts
+    FOR INSERT
+    WITH CHECK (
+    user_id = NULLIF(current_setting('app.current_user_id', true), '')::bigint
+    );
+
+DROP POLICY account_insert on accounts;
 
 
 INSERT INTO accounts(user_id, balance) VALUES (1, 1000);
