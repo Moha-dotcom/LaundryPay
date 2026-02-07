@@ -1,5 +1,6 @@
 import pool from '../config/dbconnect.js'
 import {createLogger, format, transports} from 'winston'
+
 const { combine, timestamp, label, prettyPrint, } = format;
 const logger = createLogger({
     format: combine(
@@ -37,71 +38,90 @@ class Deposit {
             client = await pool.connect();
             await client.query('BEGIN');
             // We have to check if the user has an Account
-
             await this.setCurrentUser(client, this.getUserID());
             const result = await client.query(`SELECT u.id   AS user_id,  a.id   AS account_id,  a.balance
             FROM users u
-            JOIN accounts a ON u.id = a.user_id
+            LEFT JOIN accounts a ON u.id = a.user_id
             WHERE u.id = $1
             `,
                 [this.getUserID()]
             );
-            // If no account, create one
-            if (result.rows.length === 0) {
-                throw new Error('User does not have an account');
-            }
-
-
-            console.log(`Balance: ${balance}`);
-
+            let accountCreationResult = await this.CreateAccountId(result, client);
+            console.log(accountCreationResult);
             await client.query('COMMIT')
-            // console.log(result.rows);
+            return accountCreationResult
+        }catch (err){
+            logger.error(err.message);
+        }finally {
+           if(client) client.release();
+        }
+
+    }
+
+
+    async CreateAccountId(result, client) {
+        try {
+            let accountID, balance
+            // await this.setCurrentUser(client, this.getUserID());
+
+            if (!result.rows[0] || !result.rows[0].account_id) {
+                // Now let attach an account to a user if they have an account:
+                const insertResult = await client.query(`
+                    INSERT INTO accounts(user_id, balance) 
+                    VALUES ($1, $2) RETURNING id, balance`,
+                    [this.getUserID(), 0]);
+
+                accountID = insertResult.rows[0].id;
+                balance = insertResult.rows[0].balance;
+
+                console.log('Created new account:', accountID, balance);
+
+            }
+            return {accountID, balance};
         }catch (err){
             logger.error(err.message);
         }
 
     }
 
-
-
-    async setDeposit() {
-        let client;
-        try {
-            client  = await pool.connect();
-            await client.query('BEGIN');
-            await this.setCurrentUser(client, this.getUserID());
-            // If the account id is not available for this userId
-             // check if the account Id is available if it's Not
-             const accountId = await client.query(
-                 `SELECT * FROM accounts WHERE id = $1`,
-                 [this.getAccount_id()]
-             );
-
-            let startingBalance = 0;
-            if (accountId.rows.length === 0) {
-                await client.query(
-                    `INSERT INTO accounts (user_id, balance)  VALUES ($1, $2)`,
-                    [this._user_id, startingBalance]
-                );
-            }
-             // log(`Account ID: ${accountId.rows[0].id}`);
-            // Generate an account ID
-            if(this.getDeposit_amount() <= 5){
-                 logger.error('Deposit Amount Has to be More than or Equal to $5')
-            }
-            // 4️⃣ Apply deposit (RLS enforced here)
-            const updateResult = await this.updateUserAccountWithNewDepositAmount(client, this.getDeposit_amount(), this.getAccount_id());
-            let res = await this.storeDepositLogs(client, this.getDeposit_amount(), this.getAccount_id());// If deposit is Less than 0 Don't store
-            await client.query('COMMIT');
-            logger.info(`Your current Balance is : ${updateResult.rows[0].balance}` )
-            return res.rows[0]
-
-        }catch (error) {
-            logger.error(error.message);
-        }finally {
-            await client.release();
-        }
-    }
+    // async setDeposit() {
+    //     let client;
+    //     try {
+    //         client  = await pool.connect();
+    //         await client.query('BEGIN');
+    //         await this.setCurrentUser(client, this.getUserID());
+    //         // If the account id is not available for this userId
+    //          // check if the account Id is available if it's Not
+    //          const accountId = await client.query(
+    //              `SELECT * FROM accounts WHERE id = $1`,
+    //              [this.getAccount_id()]
+    //          );
+    //
+    //         let startingBalance = 0;
+    //         if (accountId.rows.length === 0) {
+    //             await client.query(
+    //                 `INSERT INTO accounts (user_id, balance)  VALUES ($1, $2)`,
+    //                 [this._user_id, startingBalance]
+    //             );
+    //         }
+    //          // log(`Account ID: ${accountId.rows[0].id}`);
+    //         // Generate an account ID
+    //         if(this.getDeposit_amount() <= 5){
+    //              logger.error('Deposit Amount Has to be More than or Equal to $5')
+    //         }
+    //         // 4️⃣ Apply deposit (RLS enforced here)
+    //         const updateResult = await this.updateUserAccountWithNewDepositAmount(client, this.getDeposit_amount(), this.getAccount_id());
+    //         let res = await this.storeDepositLogs(client, this.getDeposit_amount(), this.getAccount_id());// If deposit is Less than 0 Don't store
+    //         await client.query('COMMIT');
+    //         logger.info(`Your current Balance is : ${updateResult.rows[0].balance}` )
+    //         return res.rows[0]
+    //
+    //     }catch (error) {
+    //         logger.error(error.message);
+    //     }finally {
+    //         await client.release();
+    //     }
+    // }
 
     async recentDeposit(){
         const client = await pool.connect();
@@ -148,7 +168,7 @@ class Deposit {
 // SELECT u.id, A.id FROM USERS u
 // JOIN ACCOUNTS A on u.id = A.user_id;
 
-const deposits = new Deposit(2, 6, 4)
+const deposits = new Deposit(10, 6, 90)
 // const executeDeposit = deposits.setDeposit(deposits);
 // logger.info(await  executeDeposit);
 // logger.info(await deposits.recentDeposit());
