@@ -26,11 +26,11 @@ class DepositService {
 
     // logic would be :
     // Get the userId
-    // Join  User & Account Table Get the Account Id
+    // Join  UserModel & Account Table Get the Account Id
     // If It doesn't return anything Then Create A New account For the
-    // User with Starting Balance 0
+    // UserModel with Starting Balance 0
 
-    // Later we will work on register User Once we register user we will
+    // Later we will work on register UserModel Once we register user we will
     // Automatically assign an Account ID
     // That How the deposit should have worked
 
@@ -44,7 +44,7 @@ class DepositService {
             const result = await this.checkIfAccountIdExist(client);
             let accountCreationResult = await this.CreateAccountId(result, client);
             // It returns undefined if this user ID has an available AccountId;
-            // We have to fix that so that if the current User has an accountID
+            // We have to fix that so that if the current UserModel has an accountID
             // We will just deposit.
 
             console.log(accountCreationResult);
@@ -173,7 +173,7 @@ class DepositService {
 }
 
 /// Here We are supposed to use account_id we have to automatically
-// Join The User and Account Table to get the Account ID of the user
+// Join The UserModel and Account Table to get the Account ID of the user
 // We will Change that Later
 // SELECT u.id, A.id FROM USERS u
 // JOIN ACCOUNTS A on u.id = A.user_id;

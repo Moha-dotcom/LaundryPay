@@ -6,8 +6,8 @@
 
 ## ✨ Features
 
-### 👤 User & Account
-- User registration with a **unique phone number**  
+### 👤 UserModel & Account
+- UserModel registration with a **unique phone number**  
 - One wallet account per user  
 - Real-time **balance tracking**  
 - Configurable **low-balance alerts**  
