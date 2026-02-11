@@ -1,7 +1,7 @@
 import pool from "../config/dbconnect.js";
 import {type QueryResult} from 'pg'
-import pg from "pg";
-type PoolClient = ReturnType<pg.Pool["connect"]>;
+
+import {Pool }  from "pg";
 import UserModel from "../models/UserModel.ts";
 import {createLogger, format, transports} from 'winston'
 const { combine, timestamp, label, prettyPrint, } = format;
@@ -15,9 +15,9 @@ const logger = createLogger({
 
 
 export default class UserRepository {
-    private client: PoolClient;
+    private readonly client: Pool;
 
-    constructor( client : PoolClient ) {
+    constructor( client : Pool ) {
         this.client = client;
     }
 
@@ -27,9 +27,12 @@ export default class UserRepository {
     async findUserByPhone(phoneNumber : string) : Promise<boolean>{
         // We work on check if the User phoneNumber is Valid
         try {
-          const checkUser: QueryResult= await this.client.query(`SELECT id FROM users WHERE phoneNumber = $1`,
-              [phoneNumber]);
-               return checkUser.rows.length > 0;
+            const query = {
+                text : 'SELECT id FROM users WHERE phoneNumber = $1',
+                values : [phoneNumber],
+                rowMode: 'array',}
+          const checkUser: QueryResult = await this.client.query(query);
+            return checkUser.rows.length > 0;
            }catch(err){
                console.error(err);
                return false
@@ -55,11 +58,10 @@ export default class UserRepository {
 
 }
 
+// We're using pool here because we jsut need one connection, and it will close or end Automatically.
+// I won't hold a connection in place once it's done with it, it will release
+const newUser = new UserModel('Mohamed  Abdullahi', '738834993')
+export const userRepository = new UserRepository(pool);
+console.log(await userRepository.findUserByPhone('738834993'));
 
-const client = await pool.connect();
-export const userRepository = new UserRepository(client);
-// // const exists =   userRepository.findUserByPhone('6125550101');
-// const savedUser = await userRepository.saveUser(user1);
-// // console.log(await savedUser)
-// // console.log("User exists:", await exists);
-// // client.release();
+
