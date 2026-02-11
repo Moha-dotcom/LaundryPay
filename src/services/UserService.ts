@@ -2,11 +2,10 @@ import pool from '../config/dbconnect.js'
 import {userRepository} from '../Repository/UserRepository.ts';
 import UserRepository from '../Repository/UserRepository.ts';
 import UserModel from "../models/UserModel.ts";
-type PoolClient = ReturnType<pg.Pool["connect"]>;
-import {createLogger, format, transports} from 'winston'
-import pg from "pg";
-// import { PoolClient } from 'pg';
+import {type QueryResult} from 'pg'
 
+import {PoolClient }  from "pg";
+import {createLogger, format, transports} from 'winston'
 const { combine, timestamp, label, prettyPrint, } = format;
 const logger = createLogger({
     format: combine(
@@ -25,14 +24,14 @@ const logger = createLogger({
     async registerUser(userModel : UserModel) : Promise<boolean> {
         let client : PoolClient;
         try {
-             client = this.userRepository.getClient()
+             client = await pool.connect()
             return await this.verifyUser(client, userModel);
         }catch(err){
            if(client ) await client.query('ROLLBACK'); // ensure rollback on any error
             logger.error("Error in registerUser:", err instanceof Error ? err.message : err);
             return false;
         }finally {
-            if(client) client.release();
+            if(client) client.release()
         }
     }
 
@@ -51,6 +50,7 @@ const logger = createLogger({
 
 
      async showBalance(userModel : UserModel) : Promise<boolean> {
+
 
      }
  }

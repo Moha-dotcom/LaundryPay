@@ -1,6 +1,6 @@
 import pkg from 'pg'
-export const {Pool } = pkg;
-const pool = new Pool({
+export const {Pool, PoolClient, Result } = pkg;
+export const pool = new Pool({
     host: 'localhost',
     user: 'laundryapp',
     password: 'laundrypassword',
