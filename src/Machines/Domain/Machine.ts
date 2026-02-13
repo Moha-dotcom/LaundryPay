@@ -59,6 +59,7 @@ class Machine {
             throw new Error("Cannot reset machine before finishing");
         }
 
+
         this._currentUserId = null;
         this._status = Status.Idle;
     }
