@@ -2,7 +2,7 @@
 // import {type QueryResult} from 'pg'
 //
 // import {Pool }  from "pg";
-// import User from "./identity/domain/User.ts";
+// import User from "./Customer/domain/User.ts";
 // import {createLogger, format, transports} from 'winston'
 // const { combine, timestamp, label, prettyPrint, } = format;
 // const logger = createLogger({

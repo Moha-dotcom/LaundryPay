@@ -1,7 +1,7 @@
 import pool from './config/dbconnect.js'
 import {userRepository} from './lllUserRepository.ts';
 import LllUserRepository from './lllUserRepository.ts';
-import User from "./identity/domain/User.ts";
+import User from "./Customer/domain/User.ts";
 import {type QueryResult} from 'pg'
 
 import {Pool }  from "pg";

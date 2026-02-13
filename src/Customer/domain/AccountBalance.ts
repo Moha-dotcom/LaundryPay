@@ -1,6 +1,5 @@
 import User from "./User";
 
-
 export class AccountBalance {
     private readonly  _amount : number
     constructor(amount: number) {
