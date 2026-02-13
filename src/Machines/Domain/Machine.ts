@@ -10,34 +10,57 @@ enum Status {
 
 
 class Machine {
-    private machineId: number;
-    private status: Status;
-    private currentUserId : number;
-    constructor(machineId : number, status : Status , currentUserId : number ) {
-        this.status = status;
-        this.currentUserId = currentUserId;
-        this.machineId = machineId;
+
+    private readonly _machineId: number;
+    private _status: Status;
+    private _currentUserId: number | null;
+    constructor(machineId : number ) {
+        this._status = Status.Idle;
+        this._currentUserId = null
+        this._machineId = machineId;
+    }
+    get status(): Status {
+        return this._status;
     }
 
-    isAvailable(machine : Machine) : boolean {
-        return machine.status === Status.Idle;
+    get currentUserId(): number | null {
+        return this._currentUserId;
     }
 
-    start(machine : Machine) : {}  {
-        if(!this.isAvailable(machine )) {
-           let message  =  new Error ('Machine not available').message;
-            return {errorMsg : message, status : machine.status, readyToUse : false };
+
+    get machineId(): number {
+        return this._machineId;
+    }
+
+
+
+
+    isAvailable(): boolean {
+        return this.status === Status.Idle;
+    }
+
+    start(userId : number)   {
+            if (!this.isAvailable()) {
+                throw new Error("Machine not available");
+            }
+
+            this._currentUserId = userId;
+            this._status = Status.Washing;
+    }
+    finish() {
+        if(this.status !== Status.Washing && this.status !== Status.Drying) {
+            throw new Error("Machine is not running");
         }
-        else return {readyToUse : true};
+        this._status = Status.Finished;
+
     }
-    stop(machine : Machine) {
-        return machine.status === Status.Finished;
+    reset() {
+        if (this.status !== Status.Finished) {
+            throw new Error("Cannot reset machine before finishing");
+        }
+
+        this._currentUserId = null;
+        this._status = Status.Idle;
     }
 }
 
-console.log(Status.Washing)
-
-const machineK = new Machine(92, Status.Idle, 9233);
-// console.log(machineK.isAvailable(machineK));
-log(machineK.start(machineK));
-// log(machineK.stop(machineK));
