@@ -4,7 +4,7 @@ import UserRepository from '../Repository/UserRepository.ts';
 import UserModel from "../models/UserModel.ts";
 import {type QueryResult} from 'pg'
 
-import {PoolClient }  from "pg";
+import {Pool }  from "pg";
 import {createLogger, format, transports} from 'winston'
 const { combine, timestamp, label, prettyPrint, } = format;
 const logger = createLogger({
@@ -22,9 +22,9 @@ const logger = createLogger({
         this.userRepository = userRepository;
     }
     async registerUser(userModel : UserModel) : Promise<boolean> {
-        let client : PoolClient;
+        let client : Pool;
         try {
-             client = await pool.connect()
+             client = await this.userRepository.getPool().connect();
             return await this.verifyUser(client, userModel);
         }catch(err){
            if(client ) await client.query('ROLLBACK'); // ensure rollback on any error

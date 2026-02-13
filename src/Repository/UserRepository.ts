@@ -15,23 +15,22 @@ const logger = createLogger({
 
 
 export default class UserRepository {
-    private readonly client: Pool;
+    private readonly pool: Pool;
 
-    constructor( client : Pool ) {
-        this.client = client;
+    constructor( pool : Pool ) {
+        this.pool = pool;
     }
 
-    getClient(){
-        return this.client;
+    getPool(){
+        return this.pool;
     }
     async findUserByPhone(phoneNumber : string) : Promise<boolean>{
-        // We work on check if the User phoneNumber is Valid
         try {
             const query = {
                 text : 'SELECT id FROM users WHERE phoneNumber = $1',
-                values : [phoneNumber],
-                rowMode: 'array',}
-          const checkUser: QueryResult = await this.client.query(query);
+                values : [phoneNumber]
+              }
+          const checkUser: QueryResult<{id : number}> = await this.pool.query(query);
             return checkUser.rows.length > 0;
            }catch(err){
                console.error(err);
@@ -41,7 +40,7 @@ export default class UserRepository {
 
     async saveUser(user : UserModel) : Promise<boolean>{
             try {
-                const result : QueryResult = await this.client.query(`INSERT INTO USERS (full_name, phoneNumber)
+                const result : QueryResult<{id : number , full_name : string, phoneNumber : string}> = await this.pool.query(`INSERT INTO USERS (full_name, phoneNumber)
                 VALUES ($1, $2) returning id, full_name, phoneNumber`, [user.full_name, user.phoneNumber]);
                 if(result.rows.length > 0){
                     logger.info("User has been  saved successfully");
